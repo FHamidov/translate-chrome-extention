@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Azerbaijani Translator",
+  "version": "1.0",
+  "description": "Seçilmiş mətni avtomatik olaraq Azərbaycan dilinə tərcümə edir",
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://api.mymemory.translated.net/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+} 
