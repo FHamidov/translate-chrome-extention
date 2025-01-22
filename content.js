@@ -1,9 +1,11 @@
-document.addEventListener('mouseup', function() {
+document.addEventListener('mouseup', function(event) {
     const selectedText = window.getSelection().toString().trim();
     if (selectedText) {
         chrome.runtime.sendMessage({
             action: 'translate',
-            text: selectedText
+            text: selectedText,
+            mouseX: event.clientX,
+            mouseY: event.clientY
         });
     }
 });
@@ -40,8 +42,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             max-width: 300px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border: 1px solid rgba(0, 0, 0, 0.1);
-            transition: opacity 0.2s ease-in-out;
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
             opacity: 0;
+            transform: translateY(10px);
         `;
 
         const header = document.createElement('div');
@@ -94,17 +97,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         tooltip.appendChild(translationText);
         document.body.appendChild(tooltip);
 
+        // Tooltip mövqeyini hesablayaq
         const tooltipRect = tooltip.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        // Mouse mövqeyinə görə tooltip-i yerləşdirək
         let left = rect.left + window.scrollX;
-        let top = rect.bottom + window.scrollY + 8;
+        let top = rect.bottom + window.scrollY;
 
-        // Ekrandan kənara çıxmasın
-        if (left + tooltipRect.width > window.innerWidth) {
-            left = window.innerWidth - tooltipRect.width - 16;
+        // Tooltip-in sağa və aşağıya doğru çıxmasını yoxlayaq
+        if (left + tooltipRect.width > viewportWidth) {
+            // Sağa çıxırsa, sola yerləşdirək
+            left = viewportWidth - tooltipRect.width - 20;
         }
-        if (top + tooltipRect.height > window.innerHeight) {
-            top = rect.top + window.scrollY - tooltipRect.height - 8;
+
+        // Aşağıya çıxırsa, yuxarıda göstərək
+        if (top + tooltipRect.height > window.scrollY + viewportHeight) {
+            top = rect.top + window.scrollY - tooltipRect.height - 10;
         }
+
+        // Minimum məsafələri qoruyaq
+        left = Math.max(20, left);
+        top = Math.max(window.scrollY + 20, top);
 
         tooltip.style.left = left + 'px';
         tooltip.style.top = top + 'px';
@@ -112,6 +127,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // Animasiya
         requestAnimationFrame(() => {
             tooltip.style.opacity = '1';
+            tooltip.style.transform = 'translateY(0)';
         });
     }
 }); 
